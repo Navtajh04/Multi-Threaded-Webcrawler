@@ -75,6 +75,7 @@ static void *getUncompressedDataCallback(void *pthreadArgPtr){
         pthreadArg->uncompressedData.length += idatUncompressedData.length;
         pthread_mutex_unlock(&pthreadArgMutex);
         curlRecvBufCleanup(&recvBuf);
+        free(idatUncompressedData.data);
         uniqueFragmentsReceived++;
     }
     pthread_exit(0);
