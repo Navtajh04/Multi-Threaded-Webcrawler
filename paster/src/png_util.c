@@ -28,7 +28,6 @@
 /**
  * @brief writes all of the necessary chunks to a file to create a properly formatted png file
  * 
- * @param destinationFIle - pointer to the file that should become the newly created png
  * @param width - width of the png image in pixels
  * @param height - height of the final png image in pixels
  * @param idatData - array of bytes holding the idatData that needs to be written into the png
@@ -36,8 +35,9 @@
  * 
  * @return int - 0 if successful, otherwise 1 if failed
 */
-static int createPNGFile(FILE* destinationFile, uint32_t width, uint32_t height,
+int createPNGFile(uint32_t width, uint32_t height,
                          uint8_t* idatData, uint32_t idatDataLength) {
+    FILE* destinationFile = fopen(OUTPUT_FILE_NAME, "wb+");
 
     if (destinationFile == NULL) {
         printf("Failed to open the destination file.\n");
@@ -202,50 +202,23 @@ static int createPNGFile(FILE* destinationFile, uint32_t width, uint32_t height,
     return 0;
 }
 
-int getIdatData(uncompressed_data_t *dest, int8_t *src){
+int getIdatData(uncompressed_data_t *dest, uint8_t *src){
         uint32_t currentFileDataLen = 0;
 
         // Move file pointer to the IDAT data length field for the current file
-        memcpy(currentFileDataLen, src + PNG_SIGNATURE_SIZE + CHUNK_LEN_SIZE + CHUNK_TYPE_SIZE + DATA_IHDR_SIZE + CHUNK_CRC_SIZE, SEEK_SET, sizeof(uint32_t));
+        memcpy(&currentFileDataLen, src + PNG_SIGNATURE_SIZE + CHUNK_LEN_SIZE + CHUNK_TYPE_SIZE + DATA_IHDR_SIZE + CHUNK_CRC_SIZE, sizeof(uint32_t));
 
         currentFileDataLen = ntohl(currentFileDataLen);
 
-        // Move the file pointer to the end of the file
-        fseek(currentFile, 0, SEEK_END);
-
-        // skip over the chunk type field to get to the data field
-        fseek(currentFile, PNG_SIGNATURE_SIZE + 2*CHUNK_LEN_SIZE + 2*CHUNK_TYPE_SIZE + DATA_IHDR_SIZE + CHUNK_CRC_SIZE, SEEK_SET);
-
         uint8_t *currentFileCompressedData = malloc(currentFileDataLen); 
-        
-        if(fread(currentFileCompressedData, sizeof(uint8_t), currentFileDataLen, currentFile) != currentFileDataLen){
-            printf("Failed to read the integer from the file. 3\n");
-            fclose(currentFile);
-            fclose(outputFile);
-            return 1;
-        }
 
-        uncompressed_data_t currentFileUncompressedData = {0};
-        currentFileUncompressedData.data = malloc(pngHeight*((width*4)+ 1));
-        memset(currentFileUncompressedData.data, 0, pngHeight*((width*4)+ 1));
+        memcpy(currentFileCompressedData, src + PNG_SIGNATURE_SIZE + 2*CHUNK_LEN_SIZE + 2*CHUNK_TYPE_SIZE + DATA_IHDR_SIZE + CHUNK_CRC_SIZE, currentFileDataLen);
 
-        if(memInf(currentFileUncompressedData.data, &currentFileUncompressedData.length, currentFileCompressedData, (uint64_t) currentFileDataLen) != 0){
+        if(memInf(dest->data, &dest->length, currentFileCompressedData, (uint64_t) currentFileDataLen) != 0){
             printf("could not uncompress the data\n");
-            fclose(currentFile);
-            fclose(outputFile);
             return 1;
         }
-
-        idatUncompressedData.data = realloc(idatUncompressedData.data, idatUncompressedData.length + currentFileUncompressedData.length);
-        memcpy(idatUncompressedData.data + idatUncompressedData.length, currentFileUncompressedData.data, currentFileUncompressedData.length);
-
-        idatUncompressedData.length += currentFileUncompressedData.length;
 
         free(currentFileCompressedData);
-        free(currentFileUncompressedData.data);
-        if(fclose(currentFile) != 0){
-            printf("failed to close the file\n");
-            fclose(outputFile);
-            return 1;
-        }
+        return 0;
 }

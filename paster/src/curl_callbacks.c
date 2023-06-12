@@ -1,4 +1,5 @@
 #include "../include/curl_callbacks.h"
+#include "../include/curl.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,12 +7,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <curl/curl.h>
-
-#define IMG_URL "http://ece252-1.uwaterloo.ca:2520/image?img=1"
-#define DUM_URL "https://example.com/"
-#define ECE252_HEADER "X-Ece252-Fragment: "
-#define BUF_SIZE 1048576  /* 1024*1024 = 1M */
-#define BUF_INC  524288   /* 1024*512  = 0.5M */
 
 #define max(a, b) \
    ({ __typeof__ (a) _a = (a); \
@@ -63,35 +58,4 @@ size_t curlWriteCallback(char *p_recv, size_t size, size_t nmemb, void *p_userda
     p->buf[p->size] = 0;
 
     return realsize;
-}
-
-
-int recvBufInit(curl_recv_buf_t *ptr, size_t max_size) {
-    void *p = NULL;
-    
-    if (ptr == NULL) {
-        return 1;
-    }
-
-    p = malloc(max_size);
-    if (p == NULL) {
-	return 2;
-    }
-    
-    ptr->buf = p;
-    ptr->size = 0;
-    ptr->max_size = max_size;
-    ptr->seq = -1;              /* valid seq should be non-negative */
-    return 0;
-}
-
-int recvBufCleanup(curl_recv_buf_t *ptr) {
-    if (ptr == NULL) {
-	return 1;
-    }
-    
-    free(ptr->buf);
-    ptr->size = 0;
-    ptr->max_size = 0;
-    return 0;
 }
