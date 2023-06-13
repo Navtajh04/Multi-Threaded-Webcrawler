@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#define DECIMAL_NUM_BASE 10
+
 /**
  * @brief: a command that takes -t and -n options
  * -t <number of threads>, default value 1 (i.e. single threaded)
@@ -23,7 +25,7 @@ int main(int argc, char **argv) {
     while ((c = getopt (argc, argv, "t:n:")) != -1) {
         switch (c) {
         case 't':
-	    numThreads = strtoul(optarg, NULL, 10);
+	    numThreads = strtoul(optarg, NULL, DECIMAL_NUM_BASE);
 	    printf("option -t specifies a value of %d.\n", numThreads);
 	    if (numThreads <= 0 || numThreads > __UINT8_MAX__) {
                 fprintf(stderr, "%s: 0 < %s < 255 -- 't'\n", argv[0], str);
@@ -31,7 +33,7 @@ int main(int argc, char **argv) {
             }
             break;
         case 'n':
-            imageNum = strtoul(optarg, NULL, 10);
+            imageNum = strtoul(optarg, NULL, DECIMAL_NUM_BASE);
 	    printf("option -n specifies a value of %d.\n",  imageNum);
             if ( imageNum <= 0 ||  imageNum > 3) {
                 fprintf(stderr, "%s: %s 1, 2, or 3 -- 'n'\n", argv[0], str);

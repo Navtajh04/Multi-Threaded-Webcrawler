@@ -3,18 +3,28 @@
 
 #include <stdio.h>
 
+/**
+ * @brief callback function to save the sequence number of a received PNG fragment
+ * 
+ * @param p_recv the received libcurl data
+ * @param size size in bytes of each data element being received
+ * @param nmemb number of data elements being received
+ * @param p_userdata buffer to store the received data
+ * 
+ * @return size_t - number of bytes that were received by libcurl
+*/
 size_t curlHeaderCallback(char *p_recv, size_t size, size_t nmemb, void *userdata);
 
 /**
- * @brief write callback function to save a copy of received data in RAM.
- *        The received libcurl data are pointed by p_recv, 
- *        which is provided by libcurl and is not user allocated memory.
- *        The user allocated memory is at p_userdata. One needs to
- *        cast it to the proper struct to make good use of it.
- *        This function maybe invoked more than once by one invokation of
- *        curl_easy_perform().
- */
-
+ * @brief callback function to save received data from cURL to a buffer
+ * 
+ * @param p_recv the received libcurl data
+ * @param size size in bytes of each data element being received
+ * @param nmemb number of data elements being received
+ * @param p_userdata pointer to struct to store the received data
+ * 
+ * @return size_t - number of bytes that were received by libcurl
+*/
 size_t curlWriteCallback(char *p_recv, size_t size, size_t nmemb, void *p_userdata);
 
 

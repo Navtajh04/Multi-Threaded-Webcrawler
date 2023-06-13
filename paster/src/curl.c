@@ -12,26 +12,42 @@
 #include <string.h>
 
 #define IMAGE_NUM_DIGITS 1
+#define URL_MAX_SIZE 256
 
-int curlRecvBufInit(curl_recv_buf_t *ptr, size_t max_size) {
+/**
+ * @brief initialize the recv buf struct to be used to store data received from libcurl
+ * 
+ * @param ptr pointer to a curl_recv_buf_t struct to be initialized
+ * @param maxSize max size of the received data
+ * 
+ * @return int - 0 if successful
+*/
+int curlRecvBufInit(curl_recv_buf_t *ptr, size_t maxSize) {
     void *p = NULL;
     
     if (ptr == NULL) {
         return 1;
     }
 
-    p = malloc(max_size);
+    p = malloc(maxSize);
     if (p == NULL) {
 	return 2;
     }
     
     ptr->buf = p;
     ptr->size = 0;
-    ptr->max_size = max_size;
+    ptr->maxSize = maxSize;
     ptr->seq = -1;              /* valid seq should be non-negative */
     return 0;
 }
 
+/**
+ * @brief clean up the memory allocated to the curl_recv_buf_t struct
+ * 
+ * @param ptr pointer to the curl_recv_buf_t struct that needs to be cleaned up
+ * 
+ * @return int - 0 if successful
+*/
 int curlRecvBufCleanup(curl_recv_buf_t *ptr) {
     if (ptr == NULL) {
 	return 1;
@@ -39,15 +55,23 @@ int curlRecvBufCleanup(curl_recv_buf_t *ptr) {
     
     free(ptr->buf);
     ptr->size = 0;
-    ptr->max_size = 0;
+    ptr->maxSize = 0;
     return 0;
 }
 
-int curlGetIdatData(curl_recv_buf_t *recvBuf, int imageNum){
+/**
+ * @brief get the PNG data from the specified web server
+ * 
+ * @param recvBuf buffer to store the received PNG data
+ * @param imageNum which web server to get PNG data from
+ * 
+ * @return int - 0 if successful
+*/
+int curlGetData(curl_recv_buf_t *recvBuf, int imageNum){
     CURL *curlHandle;
     CURLcode res;
-    char url[256] = IMG_URL_BASE;
-    char fname[256];
+    char url[URL_MAX_SIZE] = IMG_URL_BASE;
+    char fname[URL_MAX_SIZE];
     pid_t pid =getpid();
     
     curlRecvBufInit(recvBuf, BUF_SIZE);
