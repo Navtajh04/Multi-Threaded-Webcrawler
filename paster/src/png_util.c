@@ -202,6 +202,14 @@ int createPNGFile(uint32_t width, uint32_t height,
     return 0;
 }
 
+/**
+ * @brief parses the bytes of a PNG file and stores the uncompressed IDAT chunk data into dest->data
+ * 
+ * @param dest uncompressed_data_t struct to store uncompressed IDAT chunk
+ * @param src array of bytes holding the PNG image data
+ * 
+ * @return int - 0 if successful 
+*/
 int getIdatData(uncompressed_data_t *dest, uint8_t *src){
         uint32_t currentFileDataLen = 0;
 

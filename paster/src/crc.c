@@ -1,6 +1,7 @@
 #include "../include/crc.h"
 
 #define CRC_TABLE_SIZE 256
+#define CRC_INIT_VALUE 0xFFFFFFFFL
 
 /* Table of CRCs of all 8-bit messages. */
 unsigned long crcTable[CRC_TABLE_SIZE];
@@ -55,5 +56,5 @@ unsigned long updateCrc(unsigned long crc, unsigned char *buf, int len)
  * @return unsigned long - value of the calculated CRC
 */
 unsigned long calculateCrc(unsigned char *buf, int len) {
-    return updateCrc(0xFFFFFFFFL, buf, len) ^ 0xFFFFFFFFL;
+    return updateCrc(CRC_INIT_VALUE, buf, len) ^ CRC_INIT_VALUE;
 }

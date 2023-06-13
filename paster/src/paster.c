@@ -19,8 +19,23 @@ static uint8_t uniqueFragmentsReceived;
 static pthread_mutex_t fragmentReceivedCheckMutex;
 static pthread_mutex_t pthreadArgMutex;
 
+/**
+ * @brief callback function to be used to get the uncompressed IDAT chunk data from the specified web server
+ * 
+ * @param pthreadArgPtr pthread_arg_t struct typecasted as void pointer that holds the arguments for the thread
+ * 
+ * @return int - 0 if successful
+*/
 static void *getUncompressedDataCallback(void *pthreadArgPtr);
 
+/**
+ * @brief spawns the specified number of threads to get a PNG image from a web server and store it in all.png
+ * 
+ * @param numThreads number of threads to use
+ * @param imageNum which PNG image to get (should be between 1-3)
+ * 
+ * @return int - 0 if successful
+*/
 int getImage(int numThreads, int imageNum){
     pthread_arg_t pthreadArg = {0};
     pthread_t *threadHandles = malloc(sizeof(pthread_t) * numThreads);
@@ -55,11 +70,19 @@ int getImage(int numThreads, int imageNum){
     return 0;
 }
 
+/**
+ * @brief callback function to be used to get the uncompressed IDAT chunk data from the specified web server
+ * 
+ * @param pthreadArgPtr pthread_arg_t struct typecasted as void pointer that holds the arguments for the thread
+ * 
+ * @return int - 0 if successful
+*/
 static void *getUncompressedDataCallback(void *pthreadArgPtr){
     pthread_arg_t *pthreadArg = (pthread_arg_t *) pthreadArgPtr;
-    while(uniqueFragmentsReceived < 50){
+    while(uniqueFragmentsReceived < NUMBER_OF_FRAGEMENTS){
         curl_recv_buf_t recvBuf;
-        curlGetIdatData(&recvBuf, pthreadArg->imageNum);
+        curlGetData(&recvBuf, pthreadArg->imageNum);
+
         pthread_mutex_lock(&fragmentReceivedCheckMutex);
         if(fragmentsReceived[recvBuf.seq] == 1){
             pthread_mutex_unlock(&fragmentReceivedCheckMutex);
@@ -67,15 +90,21 @@ static void *getUncompressedDataCallback(void *pthreadArgPtr){
         }
         fragmentsReceived[recvBuf.seq] = 1;
         pthread_mutex_unlock(&fragmentReceivedCheckMutex);
+
         uncompressed_data_t idatUncompressedData = {0};
         idatUncompressedData.data = malloc(PNG_HEIGHT*((PNG_WIDTH*4) + 1));
+
         getIdatData(&idatUncompressedData, (uint8_t*) recvBuf.buf);
+
         memcpy(pthreadArg->uncompressedData.data + idatUncompressedData.length*recvBuf.seq, idatUncompressedData.data, idatUncompressedData.length);
+
         pthread_mutex_lock(&pthreadArgMutex);
         pthreadArg->uncompressedData.length += idatUncompressedData.length;
         pthread_mutex_unlock(&pthreadArgMutex);
+
         curlRecvBufCleanup(&recvBuf);
         free(idatUncompressedData.data);
+        
         uniqueFragmentsReceived++;
     }
     pthread_exit(0);
